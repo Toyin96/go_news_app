@@ -4,23 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title>News App Demo</title>
+  <title>News WebApp</title>
+  <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
   <link rel="stylesheet" type="text/css" href="assets/style.css" />
 </head>
 
 <body>
 <main>
   <header>
-    <a class="logo" href="/">News Demo</a>
-    <form action="/search" method="GET">
+    <a class="logo" href="/">NewsMuncher</a>
+    <form action="/Search" method="GET">
 
-      <input autofocus class="search-input" value="" placeholder="Enter a news topic" type="search" name="q"/>
+      <input autofocus class="search-input" value="{{ .Query }}" placeholder="Enter a news topic" type="search" name="q"/>
 
     </form>
-<!--    <button type="button" class="github-button">click me</button>-->
-    <a href="https://github.com/Toyin96/go_news_app" class="button github-button">View on GitHub</a>
-
+    <a href="https://github.com/Toyin96/go_news_app" class="button github-button">View source code on GitHub</a>
   </header>
+  <section class="container">
+    {{if .Results}}
+      {{if (gt .Results.TotalResults 0)}}
+        <p>
+          About <strong>{{ .Results.TotalResults }}</strong> results were
+          found. You are on page <strong>{{ .CurrentPage }}</strong> of
+          <strong> {{ .TotalPages }}</strong
+          >.
+        </p>
+        {{ else if and (ne .Query "") (eq .Results.TotalResults 0) }}
+        <p>No results found for your query: <strong>{{ .Query }}</strong>.</p>
+      {{end}}
+    {{end}}
+    <ul class="search-results">
+      {{range .Results.Articles}}
+      <li class="news-article">
+        <div>
+          <a target="_blank" rel="noreferrer" href="{{.URL}}"><h3 class="title">{{.Title}}</h3></a>
+          <p class="description">{{.Description}}</p>
+          <div class="metadata">
+            <p class="source">{{.Source.Name}}</p>
+            <time class="published-date">{{ .FormatPublishedDat }}</time>
+          </div>
+        </div>
+        <img class="article-image" src="{{.URLToImage}}" />
+      </li>
+      {{ end }}
+    </ul>
+    <div class="pagination">
+      {{ if . }}
+      {{ if (gt .NextPage 2) }}
+      <a
+              href="/search?q={{ .Query }}&page={{ .PreviousPage }}"
+              class="button previous-page"
+      >Previous</a
+      >
+      {{ end }}
+      {{ if (ne .IsLastPage true) }}
+      <a
+              href="/search?q={{ .Query }}&page={{ .NextPage }}"
+              class="button next-page"
+      >Next</a
+      >
+      {{ end }}
+      {{ end }}
+    </div>
+    <footer class="footer">
+      <p>Copyright &copy; 2021 Made with &hearts; in Lagos by Toyin Onagoruwa.</p>
+    </footer>
+  </section>
 </main>
 </body>
 </html>

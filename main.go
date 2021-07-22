@@ -1,36 +1,64 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/joho/godotenv"
 	"go_news_app_git/news"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 )
 
 var tpl *template.Template
-var newsClient *news.Client
+var newsapi *news.Client
 
 func init(){
 	tpl = template.Must(template.ParseFiles("index.html"))
 }
 
-func Index(w http.ResponseWriter, req *http.Request){
-	err := tpl.Execute(w, nil)
-	if err != nil{
-		log.Panicln(err)
-	}
+type Search struct {
+	Query string
+	NextPage int
+	TotalPages int
+	Results *news.Results
 }
 
-func Search(newApi *news.Client) http.HandlerFunc {
+func (s *Search) IsLastPage() bool{
+	return s.NextPage >= s.TotalPages
+}
+
+func (s *Search) CurrentPage() int {
+	if s.NextPage == 1 {
+		return s.NextPage
+	}
+	return s.NextPage - 1
+}
+
+func (s *Search) PreviousPage() int {
+	return s.CurrentPage() - 1
+}
+
+func Index(w http.ResponseWriter, req *http.Request){
+	buf := &bytes.Buffer{}
+	err := tpl.Execute(buf, nil)
+	if err != nil{
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	buf.WriteTo(w)
+
+}
+
+func SearchHandler(newsapi *news.Client) http.HandlerFunc {
 	return func (w http.ResponseWriter, req * http.Request){
 		u, err := url.Parse(req.URL.String())
 		if err != nil {
 			log.Fatalln(err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		params := u.Query()
@@ -41,8 +69,34 @@ func Search(newApi *news.Client) http.HandlerFunc {
 			page = "1"
 		}
 
-		fmt.Printf("The search query is %s", searchQuery)
-		fmt.Printf("The page is %s", page)
+		results, err := newsapi.FetchEverything(searchQuery, page)
+		if err != nil{
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		nextPage, err := strconv.Atoi(page)
+		if err != nil{
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		search := &Search{
+			Query: searchQuery,
+			NextPage: nextPage,
+			TotalPages: int(math.Ceil(float64(results.TotalResults) / float64(newsapi.PageSize))),
+			Results: results,
+		}
+
+		if ok := !search.IsLastPage(); ok{
+			search.NextPage++
+		}
+
+		buf := &bytes.Buffer{}
+		err = tpl.Execute(buf, search)
+		if err != nil{
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		buf.WriteTo(w)
 	}
 }
 
@@ -62,13 +116,13 @@ func main(){
 	}
 
 	myClient := &http.Client{
-		Timeout:       10 * time.Second,
+		Timeout: 10 * time.Second,
 	}
-	newsClient = news.NewClient(myClient, apiKey, 20)
+	newsapi= news.NewClient(myClient, apiKey, 20)
 
 
 	http.Handle("/assets/", http.StripPrefix("/assets", fs))
 	http.HandleFunc("/", Index)
-	http.HandleFunc("/search", Search(newsClient))
+	http.HandleFunc("/search", SearchHandler(newsapi))
 	panic(http.ListenAndServe(":"+port, nil))
 }
