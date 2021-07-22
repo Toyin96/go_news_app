@@ -1,4 +1,4 @@
-module go_news_app_git
+module github.com/Toyin96/go_news_app
 
 go 1.16
 
