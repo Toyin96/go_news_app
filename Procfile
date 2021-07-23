@@ -1,1 +1,1 @@
-web: bin/go_news_app
+web: bin/go-news-app
