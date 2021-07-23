@@ -1,6 +1,7 @@
 # go_news_app
 A news app that interfaces with the News API to fetch news articles based on search queries.
 
+![alt text](assets/newsmuncher.png)
 
 # Prerequisites
 You must have Go installed on your computer before you can clone and clone run this program. The version used in this project is 1.16.3.

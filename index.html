@@ -13,7 +13,7 @@
 <main>
   <header>
     <a class="logo" href="/">NewsMuncher</a>
-    <form action="/Search" method="GET">
+    <form action="search" method="GET">
 
       <input autofocus class="search-input" value="{{ .Query }}" placeholder="Enter a news topic" type="search" name="q"/>
 
@@ -41,7 +41,7 @@
           <p class="description">{{.Description}}</p>
           <div class="metadata">
             <p class="source">{{.Source.Name}}</p>
-            <time class="published-date">{{ .FormatPublishedDat }}</time>
+            <time class="published-date">{{ .FormatPublishedDate }}</time>
           </div>
         </div>
         <img class="article-image" src="{{.URLToImage}}" />
