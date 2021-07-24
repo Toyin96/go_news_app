@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/joho/godotenv"
 	"go_news_app/news"
 	"html/template"
@@ -103,16 +104,16 @@ func SearchHandler(newsapi *news.Client) http.HandlerFunc {
 func main(){
 	err := godotenv.Load()
 	if err != nil{
-		log.Fatalln("Error loading .env file: ", err)
+		fmt.Println("It is already in heroku config var")
 	}
 
-	port := os.Getenv("port")
+	port := os.Getenv("PORT")
 
 	fs := http.FileServer(http.Dir("./assets/"))
 
 	apiKey := os.Getenv("NEWS_API_KEY")
 	if apiKey == ""{
-		log.Fatalln("ENV: API key must be set")
+		fmt.Println("It is already in heroku config var")
 	}
 
 	myClient := &http.Client{
