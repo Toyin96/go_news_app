@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"github.com/joho/godotenv"
-	"go_news_app_git/news"
+	"go_news_app/news"
 	"html/template"
 	"log"
 	"math"
